@@ -475,12 +475,74 @@ class Upgrader with WidgetsBindingObserver {
       if (shouldDisplay) {
         _displayed = true;
         Future.delayed(const Duration(milliseconds: 0), () {
-          _showDialog(
-              context: context,
-              title: messages.message(UpgraderMessage.title),
-              message: message(),
-              releaseNotes: shouldDisplayReleaseNotes() ? _releaseNotes : null,
-              canDismissDialog: canDismissDialog);
+          showModalBottomSheet(
+          enableDrag: false,
+          useSafeArea: true,
+          context: context,
+          isDismissible: false,
+          builder: (BuildContext context) {
+            return Container(
+              height: 230,
+              padding: const EdgeInsets.only(top: 16, bottom: 24),
+              margin: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Update Available',
+                          style: TextStyle(
+                            color: Color(0xFF292D32),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () => onUserLater(context, true),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'A new version of Lohono Stays is now available. Download now to avail exclusive discounts and earn Infinity Points',
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ]),
+                  Container(
+                    width: double.infinity,
+                    height: 48,
+                    child: TextButton(
+                      onPressed: () => onUserUpdated(context, !blocked()),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all(Color(0xFFAA3131)),
+                      ),
+                      child: Text(
+                        'Update',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
         });
       }
     }
