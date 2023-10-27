@@ -137,6 +137,8 @@ class Upgrader with WidgetsBindingObserver {
   /// Provides information on which OS this code is running on.
   final UpgraderOS upgraderOS;
 
+  TextStyle? textFontFamily;
+
   bool _displayed = false;
   bool _initCalled = false;
   PackageInfo? _packageInfo;
@@ -191,6 +193,7 @@ class Upgrader with WidgetsBindingObserver {
     this.dialogStyle = UpgradeDialogStyle.material,
     this.cupertinoButtonTextStyle,
     UpgraderOS? upgraderOS,
+    this.textFontFamily,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
         upgraderOS = upgraderOS ?? UpgraderOS() {
@@ -473,79 +476,150 @@ class Upgrader with WidgetsBindingObserver {
             'upgrader: shouldDisplayReleaseNotes: ${shouldDisplayReleaseNotes()}');
       }
       if (shouldDisplay) {
+        debugPrint('currentInstalledVersion ${message()} $shouldDisplay');
         _displayed = true;
         Future.delayed(const Duration(milliseconds: 0), () {
           showModalBottomSheet(
-          enableDrag: false,
-          useSafeArea: true,
-          context: context,
-          isDismissible: false,
-          builder: (BuildContext context) {
-            return Container(
-              height: 230,
-              padding: const EdgeInsets.only(top: 16, bottom: 24),
-              margin: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Update Available',
-                          style: TextStyle(
-                            color: Color(0xFF292D32),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.close),
-                          onPressed: () => onUserLater(context, true),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        'A new version of Lohono Stays is now available. Download now to avail exclusive discounts and earn Infinity Points',
-                        textAlign: TextAlign.justify,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ]),
-                  Container(
-                    width: double.infinity,
-                    height: 48,
-                    child: TextButton(
-                      onPressed: () => onUserUpdated(context, !blocked()),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all(Color(0xFFAA3131)),
-                      ),
-                      child: Text(
-                        'Update',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+            enableDrag: false,
+            useSafeArea: true,
+            context: context,
+            isDismissible: false,
+            backgroundColor: Colors.transparent,
+            builder: (BuildContext context) {
+              return WillPopScope(
+                onWillPop: () async =>
+                    await showExitConfirmationDialog(context),
+                child: Container(
+                  height: 230,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  // margin: EdgeInsets.symmetric(horizontal: 16.0),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        );
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Update Available',
+                                  style: textFontFamily!.copyWith(
+                                      color: Color(0xFF1F2C38),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                isNewerVersion(currentInstalledVersion(),
+                                        currentAppStoreVersion())
+                                    ? Container()
+                                    : IconButton(
+                                        icon: Icon(Icons.close),
+                                        onPressed: () =>
+                                            onUserLater(context, true),
+                                      )
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                'A new version of Lohono Stays is now available. Download now to avail exclusive discounts and earn Infinity Points',
+                                style: textFontFamily!.copyWith(
+                                    color: Colors.black,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400),
+                              ),
+                            ),
+                          ]),
+                      Container(
+                        width: double.infinity,
+                        height: 48,
+                        child: TextButton(
+                          onPressed: () => onUserUpdated(context, !blocked()),
+                          style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Color(0xFFAA3131)),
+                          ),
+                          child: Text(
+                            'Update',
+                            style: textFontFamily!.copyWith(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
         });
       }
     }
+  }
+
+Future<bool> showExitConfirmationDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Lohono',
+          style: textFontFamily!.copyWith(
+              color: Color(0xFF1F2C38),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Are you sure you want to exit?',
+          style: textFontFamily!.copyWith(
+              color: Color(0xFF1F2C38),
+              fontSize: 16,
+              fontWeight:
+                  FontWeight.w400), //LohoStyle.bodyBold.subText().linkColor(),
+        ),
+        actions: [
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Color(0xFFAA3131)),
+            ),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'No',
+              style: textFontFamily!.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Color(0xFFAA3131)),
+            ),
+            onPressed: () =>
+                SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+            child: Text(
+              'Yes',
+              style: textFontFamily!.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight
+                      .w500), // LohoStyle.bigText2Regular.captionSize().ascentWhiteColor(),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   bool blocked() {
