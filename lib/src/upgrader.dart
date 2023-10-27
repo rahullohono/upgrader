@@ -19,6 +19,8 @@ import 'play_store_search_api.dart';
 import 'upgrade_os.dart';
 import 'upgrade_messages.dart';
 
+import 'package:flutter/services.dart';
+
 /// Signature of callbacks that have no arguments and return bool.
 typedef BoolCallback = bool Function();
 
