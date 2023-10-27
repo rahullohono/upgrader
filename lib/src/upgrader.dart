@@ -544,7 +544,10 @@ class Upgrader with WidgetsBindingObserver {
                         width: double.infinity,
                         height: 48,
                         child: TextButton(
-                          onPressed: () => onUserUpdated(context, !blocked()),
+                          onPressed: () => onUserUpdated(context, isNewerVersion(currentInstalledVersion(),
+                                      currentAppStoreVersion())
+                                  ? blocked()
+                                  : !blocked()),
                           style: ButtonStyle(
                             backgroundColor:
                                 MaterialStateProperty.all(Color(0xFFAA3131)),
@@ -1003,5 +1006,20 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
         }
       }
     } else {}
+  }
+
+    bool isNewerVersion(String? v1, String? v2) {
+    if (v1 == null || v2 == null) {
+      return false;
+    }
+
+    final v1Parts = v1.split('.').map(int.parse).toList();
+    final v2Parts = v2.split('.').map(int.parse).toList();
+
+    if (v1Parts[0] < v2Parts[0]) {
+      return true; // Force update
+    }
+
+    return false; // Normal update or no need to force update
   }
 }
