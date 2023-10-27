@@ -139,7 +139,7 @@ class Upgrader with WidgetsBindingObserver {
   /// Provides information on which OS this code is running on.
   final UpgraderOS upgraderOS;
 
-  TextStyle? textFontFamily;
+  final TextStyle textFontFamily;
 
   bool _displayed = false;
   bool _initCalled = false;
@@ -195,7 +195,7 @@ class Upgrader with WidgetsBindingObserver {
     this.dialogStyle = UpgradeDialogStyle.material,
     this.cupertinoButtonTextStyle,
     UpgraderOS? upgraderOS,
-    this.textFontFamily,
+    required this.textFontFamily,
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
         upgraderOS = upgraderOS ?? UpgraderOS() {
@@ -516,7 +516,7 @@ class Upgrader with WidgetsBindingObserver {
                               children: [
                                 Text(
                                   'Update Available',
-                                  style: textFontFamily!.copyWith(
+                                  style: textFontFamily.copyWith(
                                       color: Color(0xFF1F2C38),
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700),
@@ -535,7 +535,7 @@ class Upgrader with WidgetsBindingObserver {
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
                                 'A new version of Lohono Stays is now available. Download now to avail exclusive discounts and earn Infinity Points',
-                                style: textFontFamily!.copyWith(
+                                style: textFontFamily.copyWith(
                                     color: Colors.black,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400),
@@ -556,7 +556,7 @@ class Upgrader with WidgetsBindingObserver {
                           ),
                           child: Text(
                             'Update',
-                            style: textFontFamily!.copyWith(
+                            style: textFontFamily.copyWith(
                                 color: Colors.white,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500),
@@ -580,14 +580,14 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
       builder: (context) => AlertDialog(
         title: Text(
           'Lohono',
-          style: textFontFamily!.copyWith(
+          style: textFontFamily.copyWith(
               color: Color(0xFF1F2C38),
               fontSize: 20,
               fontWeight: FontWeight.w700),
         ),
         content: Text(
           'Are you sure you want to exit?',
-          style: textFontFamily!.copyWith(
+          style: textFontFamily.copyWith(
               color: Color(0xFF1F2C38),
               fontSize: 16,
               fontWeight:
@@ -601,7 +601,7 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'No',
-              style: textFontFamily!.copyWith(
+              style: textFontFamily.copyWith(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w500),
@@ -615,7 +615,7 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
                 SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
             child: Text(
               'Yes',
-              style: textFontFamily!.copyWith(
+              style: textFontFamily.copyWith(
                   color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight
