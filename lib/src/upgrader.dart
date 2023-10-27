@@ -195,7 +195,7 @@ class Upgrader with WidgetsBindingObserver {
     this.dialogStyle = UpgradeDialogStyle.material,
     this.cupertinoButtonTextStyle,
     UpgraderOS? upgraderOS,
-    this.textFontFamily = TextStyle(fontFamily: 'Roboto'),
+    this.textFontFamily = const TextStyle(fontFamily: 'Roboto'),
   })  : client = client ?? http.Client(),
         messages = messages ?? UpgraderMessages(),
         upgraderOS = upgraderOS ?? UpgraderOS() {
