@@ -4,6 +4,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'upgrade_messages.dart';
 import 'upgrader.dart';
@@ -32,6 +33,7 @@ class UpgradeAlert extends StatefulWidget {
     this.dialogKey,
     this.navigatorKey,
     this.child,
+    this.textFontFamily = const TextStyle(fontFamily: 'Roboto'),
   }) : upgrader = upgrader ?? Upgrader.sharedInstance;
 
   /// The upgraders used to configure the upgrade dialog.
@@ -80,6 +82,8 @@ class UpgradeAlert extends StatefulWidget {
 
   /// The [child] contained by the widget.
   final Widget? child;
+
+  final TextStyle textFontFamily;
 
   @override
   UpgradeAlertState createState() => UpgradeAlertState();
@@ -136,23 +140,193 @@ class UpgradeAlertState extends State<UpgradeAlert> {
     if (widget.upgrader.debugLogging) {
       print('upgrader: shouldDisplayReleaseNotes: shouldDisplayReleaseNotes');
     }
-    if (shouldDisplay) {
-      displayed = true;
-      final appMessages = widget.upgrader.determineMessages(context);
+    // if (shouldDisplay) {
+    //   displayed = true;
+    //   final appMessages = widget.upgrader.determineMessages(context);
 
+    //   Future.delayed(const Duration(milliseconds: 0), () {
+    //     showTheDialog(
+    //       key: widget.dialogKey ?? const Key('upgrader_alert_dialog'),
+    //       context: context,
+    //       title: appMessages.message(UpgraderMessage.title),
+    //       message: widget.upgrader.body(appMessages),
+    //       releaseNotes:
+    //           shouldDisplayReleaseNotes ? widget.upgrader.releaseNotes : null,
+    //       canDismissDialog: widget.canDismissDialog,
+    //       messages: appMessages,
+    //     );
+    //   });
+    // }
+
+    if (shouldDisplay) {
+      // debugPrint('currentInstalledVersion ${message()} $shouldDisplay');
+      displayed = true;
       Future.delayed(const Duration(milliseconds: 0), () {
-        showTheDialog(
-          key: widget.dialogKey ?? const Key('upgrader_alert_dialog'),
+        showModalBottomSheet(
+          enableDrag: false,
+          useSafeArea: true,
           context: context,
-          title: appMessages.message(UpgraderMessage.title),
-          message: widget.upgrader.body(appMessages),
-          releaseNotes:
-              shouldDisplayReleaseNotes ? widget.upgrader.releaseNotes : null,
-          canDismissDialog: widget.canDismissDialog,
-          messages: appMessages,
+          isDismissible: false,
+          backgroundColor: Colors.transparent,
+          builder: (BuildContext context) {
+            return PopScope(
+              onPopInvoked: (didPop) async {
+                await showExitConfirmationDialog(context);
+              },
+              child: Container(
+                height: 230,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                // margin: EdgeInsets.symmetric(horizontal: 16.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Update Available',
+                                style: widget.textFontFamily.copyWith(
+                                    color: const Color(0xFF1F2C38),
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700),
+                              ),
+                              isNewerVersion(
+                                      widget.upgrader.currentInstalledVersion,
+                                      widget.upgrader.currentAppStoreVersion)
+                                  ? Container()
+                                  : IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () =>
+                                          onUserLater(context, true),
+                                    )
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              'A new version of Lohono Stays is now available. Download now to avail exclusive discounts and earn Infinity Points',
+                              style: widget.textFontFamily.copyWith(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400),
+                            ),
+                          ),
+                        ]),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: TextButton(
+                        onPressed: () => onUserUpdated(
+                            context,
+                            isNewerVersion(
+                                    widget.upgrader.currentInstalledVersion,
+                                    widget.upgrader.currentAppStoreVersion)
+                                ? widget.upgrader.blocked()
+                                : !(widget.upgrader.blocked())),
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                              const Color(0xFFAA3131)),
+                        ),
+                        child: Text(
+                          'Update',
+                          style: widget.textFontFamily.copyWith(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       });
     }
+  }
+
+  Future<bool> showExitConfirmationDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Lohono',
+          style: widget.textFontFamily.copyWith(
+              color: const Color(0xFF1F2C38),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Are you sure you want to exit?',
+          style: widget.textFontFamily.copyWith(
+              color: const Color(0xFF1F2C38),
+              fontSize: 16,
+              fontWeight:
+                  FontWeight.w400), //LohoStyle.bodyBold.subText().linkColor(),
+        ),
+        actions: [
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor:
+                  MaterialStateProperty.all(const Color(0xFFAA3131)),
+            ),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'No',
+              style: widget.textFontFamily.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor:
+                  MaterialStateProperty.all(const Color(0xFFAA3131)),
+            ),
+            onPressed: () =>
+                SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+            child: Text(
+              'Yes',
+              style: widget.textFontFamily.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight
+                      .w500), // LohoStyle.bigText2Regular.captionSize().ascentWhiteColor(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool isNewerVersion(String? v1, String? v2) {
+    if (v1 == null || v2 == null) {
+      return false;
+    }
+
+    final v1Parts = v1.split('.').map(int.parse).toList();
+    final v2Parts = v2.split('.').map(int.parse).toList();
+
+    if (v1Parts[0] < v2Parts[0]) {
+      return true; // Force update
+    }
+
+    return false; // Normal update or no need to force update
   }
 
   void onUserIgnored(BuildContext context, bool shouldPop) {
@@ -234,8 +408,10 @@ class UpgradeAlertState extends State<UpgradeAlert> {
       barrierDismissible: canDismissDialog,
       context: context,
       builder: (BuildContext context) {
-        return WillPopScope(
-            onWillPop: () async => onWillPop(),
+        return PopScope(
+            onPopInvoked: (didPop) {
+              onWillPop();
+            },
             child: alertDialog(
               key,
               title ?? '',
