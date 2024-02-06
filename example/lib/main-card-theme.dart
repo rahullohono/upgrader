@@ -1,6 +1,4 @@
-/*
- * Copyright (c) 2019-2023 Larry Aasen. All rights reserved.
- */
+// Copyright (c) 2023 Larry Aasen. All rights reserved.
 
 import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
@@ -20,14 +18,27 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+
+  final dark = ThemeData.dark(useMaterial3: true);
+
+  final light = ThemeData(
+    cardTheme: CardTheme(color: Colors.greenAccent),
+    // Change the text buttons.
+    textButtonTheme: const TextButtonThemeData(
+      style: ButtonStyle(
+        // Change the color of the text buttons.
+        foregroundColor: MaterialStatePropertyAll(Colors.orange),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Upgrader Card Example',
       home: Scaffold(
-        appBar: AppBar(title: Text('Upgrader Card Example')),
+        appBar: AppBar(title: Text('Upgrader Card Theme Example')),
         body: Container(
           margin: EdgeInsets.only(left: 12.0, right: 12.0),
           child: SingleChildScrollView(
@@ -43,6 +54,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      theme: light,
+      darkTheme: dark,
     );
   }
 

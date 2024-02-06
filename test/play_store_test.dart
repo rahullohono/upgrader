@@ -27,6 +27,10 @@ void main() {
     expect(Version.parse('1.2.3+1').toString(), '1.2.3+1');
     expect(Version.parse('0.0.0').toString(), '0.0.0');
     expect(Version.parse('0.0.0+1').toString(), '0.0.0+1');
+
+    final version1 = Version.parse('1.2.3+1');
+    final version2 = Version.parse('1.2.3+2');
+    expect(version1 == version2, isTrue);
   }, skip: false);
 
   test('testing PlayStoreSearchAPI properties', () async {
@@ -75,23 +79,23 @@ void main() {
     expect(() => playStore.lookupURLById(''), throwsAssertionError);
     expect(
         playStore.lookupURLById('com.testing.test1')!.startsWith(
-            'https://play.google.com/store/apps/details?id=com.testing.test1&gl=US&hl=en&_cb=16'),
+            'https://play.google.com/store/apps/details?id=com.testing.test1&gl=US&hl=en&_cb=17'),
         equals(true));
     expect(
         playStore.lookupURLById('com.testing.test1', country: null)!.startsWith(
-            'https://play.google.com/store/apps/details?id=com.testing.test1&hl=en&_cb=16'),
+            'https://play.google.com/store/apps/details?id=com.testing.test1&hl=en&_cb=17'),
         equals(true));
     expect(
         playStore.lookupURLById('com.testing.test1', country: '')!.startsWith(
-            'https://play.google.com/store/apps/details?id=com.testing.test1&hl=en&_cb=16'),
+            'https://play.google.com/store/apps/details?id=com.testing.test1&hl=en&_cb=17'),
         equals(true));
     expect(
         playStore.lookupURLById('com.testing.test1', country: 'IN')!.startsWith(
-            'https://play.google.com/store/apps/details?id=com.testing.test1&gl=IN&hl=en&_cb=16'),
+            'https://play.google.com/store/apps/details?id=com.testing.test1&gl=IN&hl=en&_cb=17'),
         equals(true));
     expect(
         playStore.lookupURLById('com.testing.test1', language: 'es')!.startsWith(
-            'https://play.google.com/store/apps/details?id=com.testing.test1&gl=US&hl=es&_cb=16'),
+            'https://play.google.com/store/apps/details?id=com.testing.test1&gl=US&hl=es&_cb=17'),
         equals(true));
     expect(
         playStore

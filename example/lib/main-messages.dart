@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022 Larry Aasen. All rights reserved.
+ * Copyright (c) 2020-2023 Larry Aasen. All rights reserved.
  */
 
 import 'package:flutter/foundation.dart' show SynchronousFuture;
@@ -17,11 +17,11 @@ void main() async {
   // On iOS, the default behavior will be to use the App Store version of
   // the app, so update the Bundle Identifier in example/ios/Runner with a
   // valid identifier already in the App Store.
-  runApp(Demo());
+  runApp(MyApp());
 }
 
-class Demo extends StatelessWidget {
-  Demo({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +33,7 @@ class Demo extends StatelessWidget {
         const DemoLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: [
         const Locale('en', ''), // English, no country code
@@ -75,20 +76,21 @@ class Demo extends StatelessWidget {
 }
 
 class DemoApp extends StatelessWidget {
+  static const appcastURL =
+      'https://raw.githubusercontent.com/larryaasen/upgrader/master/test/testappcast.xml';
+  final upgrader = Upgrader(
+    appcastConfig:
+        AppcastConfiguration(url: appcastURL, supportedOS: ['android']),
+    debugLogging: true,
+    messages: MyUpgraderMessages(code: 'es'),
+  );
+
   @override
   Widget build(BuildContext context) {
-    final appcastURL =
-        'https://raw.githubusercontent.com/larryaasen/upgrader/master/test/testappcast.xml';
-    final cfg = AppcastConfiguration(url: appcastURL, supportedOS: ['android']);
-
     return Scaffold(
         appBar: AppBar(title: Text(DemoLocalizations.of(context).title)),
         body: UpgradeAlert(
-          upgrader: Upgrader(
-            appcastConfig: cfg,
-            debugLogging: true,
-            messages: MyUpgraderMessages(code: 'es'),
-          ),
+          upgrader: upgrader,
           child: Center(child: Text(DemoLocalizations.of(context).checking)),
         ));
   }
