@@ -18,6 +18,8 @@ import 'play_store_search_api.dart';
 import 'upgrade_os.dart';
 import 'upgrade_messages.dart';
 
+import 'package:flutter/services.dart';
+
 /// Signature of callbacks that have no arguments and return bool.
 typedef BoolCallback = bool Function();
 
@@ -116,6 +118,12 @@ class Upgrader with WidgetsBindingObserver {
   /// is logging metrics for your app.
   WillDisplayUpgradeCallback? willDisplayUpgrade;
 
+  /// Provides information on which OS this code is running on.
+  final UpgraderOS upgraderOS;
+
+  final TextStyle textFontFamily;
+
+  bool _displayed = false;
   bool _initCalled = false;
   PackageInfo? _packageInfo;
 
@@ -141,6 +149,40 @@ class Upgrader with WidgetsBindingObserver {
   /// An evaluation should be performed.
   bool get evaluationReady => _evaluationReady;
   bool _evaluationReady = false;
+
+  final notInitializedExceptionMessage =
+      'initialize() not called. Must be called first.';
+
+  Upgrader({
+    this.appcastConfig,
+    this.appcast,
+    UpgraderMessages? messages,
+    this.debugDisplayAlways = false,
+    this.debugDisplayOnce = false,
+    this.debugLogging = false,
+    this.durationUntilAlertAgain = const Duration(days: 3),
+    this.onIgnore,
+    this.onLater,
+    this.onUpdate,
+    this.shouldPopScope,
+    this.willDisplayUpgrade,
+    http.Client? client,
+    this.showIgnore = true,
+    this.showLater = true,
+    this.showReleaseNotes = true,
+    this.canDismissDialog = false,
+    this.countryCode,
+    this.languageCode,
+    this.minAppVersion,
+    this.dialogStyle = UpgradeDialogStyle.material,
+    this.cupertinoButtonTextStyle,
+    UpgraderOS? upgraderOS,
+    this.textFontFamily = const TextStyle(fontFamily: 'Roboto'),
+  })  : client = client ?? http.Client(),
+        messages = messages ?? UpgraderMessages(),
+        upgraderOS = upgraderOS ?? UpgraderOS() {
+    if (debugLogging) print("upgrader: instantiated.");
+  }
 
   /// A shared instance of [Upgrader].
   static Upgrader get sharedInstance => _sharedInstance;
@@ -424,6 +466,99 @@ class Upgrader with WidgetsBindingObserver {
 
         appMessages = UpgraderMessages(code: languageCode);
       }
+      if (shouldDisplay) {
+        debugPrint('currentInstalledVersion ${message()} $shouldDisplay');
+        _displayed = true;
+        Future.delayed(const Duration(milliseconds: 0), () {
+          showModalBottomSheet(
+            enableDrag: false,
+            useSafeArea: true,
+            context: context,
+            isDismissible: false,
+            backgroundColor: Colors.transparent,
+            builder: (BuildContext context) {
+              return WillPopScope(
+                onWillPop: () async =>
+                    await showExitConfirmationDialog(context),
+                child: Container(
+                  height: 230,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  // margin: EdgeInsets.symmetric(horizontal: 16.0),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Update Available',
+                                  style: textFontFamily.copyWith(
+                                      color: Color(0xFF1F2C38),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                isNewerVersion(currentInstalledVersion(),
+                                        currentAppStoreVersion())
+                                    ? Container()
+                                    : IconButton(
+                                        icon: Icon(Icons.close),
+                                        onPressed: () =>
+                                            onUserLater(context, true),
+                                      )
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                'A new version of Lohono Stays is now available. Download now to avail exclusive discounts and earn Infinity Points',
+                                style: textFontFamily.copyWith(
+                                    color: Colors.black,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400),
+                              ),
+                            ),
+                          ]),
+                      Container(
+                        width: double.infinity,
+                        height: 48,
+                        child: TextButton(
+                          onPressed: () => onUserUpdated(context, isNewerVersion(currentInstalledVersion(),
+                                      currentAppStoreVersion())
+                                  ? blocked()
+                                  : !blocked()),
+                          style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Color(0xFFAA3131)),
+                          ),
+                          child: Text(
+                            'Update',
+                            style: textFontFamily.copyWith(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        });
 
       if (appMessages.languageCode.isEmpty) {
         print('upgrader: error -> languageCode is empty');
@@ -433,6 +568,59 @@ class Upgrader with WidgetsBindingObserver {
 
       return appMessages;
     }
+  }
+
+Future<bool> showExitConfirmationDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Lohono',
+          style: textFontFamily.copyWith(
+              color: Color(0xFF1F2C38),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Are you sure you want to exit?',
+          style: textFontFamily.copyWith(
+              color: Color(0xFF1F2C38),
+              fontSize: 16,
+              fontWeight:
+                  FontWeight.w400), //LohoStyle.bodyBold.subText().linkColor(),
+        ),
+        actions: [
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Color(0xFFAA3131)),
+            ),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'No',
+              style: textFontFamily.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Color(0xFFAA3131)),
+            ),
+            onPressed: () =>
+                SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+            child: Text(
+              'Yes',
+              style: textFontFamily.copyWith(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight
+                      .w500), // LohoStyle.bigText2Regular.captionSize().ascentWhiteColor(),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   bool blocked() {
@@ -640,5 +828,20 @@ class Upgrader with WidgetsBindingObserver {
         }
       }
     } else {}
+  }
+
+    bool isNewerVersion(String? v1, String? v2) {
+    if (v1 == null || v2 == null) {
+      return false;
+    }
+
+    final v1Parts = v1.split('.').map(int.parse).toList();
+    final v2Parts = v2.split('.').map(int.parse).toList();
+
+    if (v1Parts[0] < v2Parts[0]) {
+      return true; // Force update
+    }
+
+    return false; // Normal update or no need to force update
   }
 }
